@@ -1,23 +1,26 @@
 FROM python:3.10-slim
 
-# Prevent python from writing pyc files
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install system deps
-RUN apt-get update && apt-get install -y build-essential libpq-dev
+# System deps
+RUN apt-get update && apt-get install -y build-essential libpq-dev && apt-get clean
 
-# HuggingFace cache directory
+# HuggingFace cache (avoid download inside container)
 ENV TRANSFORMERS_CACHE=/app/hf_cache
 RUN mkdir -p /app/hf_cache
 
-COPY requirements.txt .
+# Install requirements
+COPY requirements-prod.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application
+# Copy app
 COPY . .
+
+# Ensure model directory exists
+RUN mkdir -p /app/models_saved
 
 EXPOSE 8000
 

@@ -2,13 +2,12 @@ FROM python:3.10-slim
 
 WORKDIR /worker
 
-RUN apt-get update && apt-get install -y build-essential libpq-dev
+RUN apt-get update && apt-get install -y build-essential libpq-dev && apt-get clean
 
-# HuggingFace cache
 ENV TRANSFORMERS_CACHE=/worker/hf_cache
 RUN mkdir -p /worker/hf_cache
 
-COPY requirements.txt .
+COPY requirements-prod.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .

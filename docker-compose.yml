@@ -1,31 +1,76 @@
+# version: "3.9"
+# services:
+#   api:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     environment:
+#       - PORT=8000
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       - redis
+
+#   worker:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile.worker
+#     depends_on:
+#       - redis
+
+#   beat:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile.beat
+#     depends_on:
+#       - redis
+
+#   redis:
+#     image: redis:alpine
+#     ports:
+#       - "6379:6379"
+
 version: "3.9"
+
 services:
   api:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - PORT=8000
     ports:
       - "8000:8000"
-    depends_on:
-      - redis
+    environment:
+      REAL_DB_URL: ${REAL_DB_URL}
+      LOCAL_DB_URL: ${LOCAL_DB_URL}
+      REDIS_URL: ${REDIS_URL}
+      QDRANT_URL: ${QDRANT_URL}
+      QDRANT_API_KEY: ${QDRANT_API_KEY}
+      GROK_API_KEY: ${GROK_API_KEY}
+      TRANSLATE_URL: ${TRANSLATE_URL}
+      MODEL_DIR: /app/models_saved
+    volumes:
+      - ./models_saved:/app/models_saved
 
   worker:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    depends_on:
-      - redis
+    environment:
+      REDIS_URL: ${REDIS_URL}
+      QDRANT_URL: ${QDRANT_URL}
+      QDRANT_API_KEY: ${QDRANT_API_KEY}
+      MODEL_DIR: /worker/models_saved
+    volumes:
+      - ./models_saved:/worker/models_saved
 
   beat:
     build:
       context: .
       dockerfile: Dockerfile.beat
-    depends_on:
-      - redis
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
+    environment:
+      REDIS_URL: ${REDIS_URL}
+      QDRANT_URL: ${QDRANT_URL}
+      QDRANT_API_KEY: ${QDRANT_API_KEY}
+      MODEL_DIR: /beat/models_saved
+    volumes:
+      - ./models_saved:/beat/models_saved

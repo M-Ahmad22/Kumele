@@ -2,14 +2,13 @@ FROM python:3.10-slim
 
 WORKDIR /beat
 
-RUN apt-get update && apt-get install -y build-essential libpq-dev
+RUN apt-get update && apt-get install -y build-essential libpq-dev && apt-get clean
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# HuggingFace cache
 ENV TRANSFORMERS_CACHE=/beat/hf_cache
 RUN mkdir -p /beat/hf_cache
+
+COPY requirements-prod.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
