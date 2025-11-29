@@ -8,7 +8,7 @@ WORKDIR /app
 # System deps
 RUN apt-get update && apt-get install -y build-essential libpq-dev && apt-get clean
 
-# HuggingFace cache (avoid download inside container)
+# HuggingFace cache
 ENV TRANSFORMERS_CACHE=/app/hf_cache
 RUN mkdir -p /app/hf_cache
 
@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app
 COPY . .
 
-# Ensure model directory exists
+# Ensure model folder exists
 RUN mkdir -p /app/models_saved
 
 EXPOSE 8000
