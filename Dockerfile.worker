@@ -1,0 +1,16 @@
+FROM python:3.10-slim
+
+WORKDIR /worker
+
+RUN apt-get update && apt-get install -y build-essential libpq-dev
+
+# HuggingFace cache
+ENV TRANSFORMERS_CACHE=/worker/hf_cache
+RUN mkdir -p /worker/hf_cache
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["celery", "-A", "app.workers.celery_app.celery_app", "worker", "--loglevel=info"]

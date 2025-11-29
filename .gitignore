@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+venv310/
+.venv310/
+*.env/
+venv/
+.venv/
+env/
+.venv/
+env3
+.venv310/
+
+# Env variables
+.env
+*.env
+
+# HuggingFace model WEIGHTS (large)
+**/pytorch_model.bin
+**/model.safetensors
+**/tf_model.h5
+**/flax_model.msgpack
+**/rust_model.ot
+
+# Local HuggingFace caches
+hf_cache/
+cache/
+tmp/
+transformers_cache/
+
+# HuggingFace SAFE files allowed
+!**/config.json
+!**/tokenizer.json
+!**/vocab.txt
+
+# Ignore downloaded model directories
+models/text/
+models/image/
+models/roberta/
+models/sentence_transformers/
+
+# DO NOT ignore your small ML models
+!models_saved/
+!models_saved/*.pkl
+!models_saved/*.joblib
+!models_saved/*.npy
+!models_saved/*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+*.egg-info
+
+# Celery beat
+celerybeat-schedule

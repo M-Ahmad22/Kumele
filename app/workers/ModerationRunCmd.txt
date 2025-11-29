@@ -1,0 +1,11 @@
+Celery
+python -m celery -A app.workers.celery_app.celery_app worker --loglevel=info --pool=solo -Q moderation_queue
+
+
+redis on ubantu 
+sudo systemctl start redis-server
+Hostname -I 
+
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+redis-cli ping
