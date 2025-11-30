@@ -1,0 +1,12 @@
+FROM python:3.10-slim
+
+WORKDIR /rewards
+
+RUN apt-get update && apt-get install -y build-essential libpq-dev && apt-get clean
+
+COPY requirements-prod.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["celery", "-A", "app.workers.celery_app.celery_app", "worker", "-Q", "rewards_queue", "--loglevel=info"]

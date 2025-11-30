@@ -10,9 +10,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from upstash_redis import Redis
+from app.config import redis_client      # ← USE REDIS FROM CONFIG
 from app.db.database import local_engine
-from app.config import REDIS_URL, REDIS_TOKEN
 
 # -------------------------------------------
 # LOAD STOPWORDS
@@ -20,25 +19,9 @@ from app.config import REDIS_URL, REDIS_TOKEN
 STOPWORDS = set(stopwords.words("english"))
 
 # -------------------------------------------
-# REDIS CLIENT (Upstash)
-# -------------------------------------------
-redis_client = Redis(
-    url=REDIS_URL,
-    token=REDIS_TOKEN
-)
-
-
-# -------------------------------------------
 # INSERT INTO UGC CONTENT TABLE
 # -------------------------------------------
-def _insert_ugc(
-    text_value: str,
-    content_type: str,
-    ref_id: Optional[int],
-    author_id: Optional[int],
-    language: Optional[str],
-) -> int:
-
+def _insert_ugc(text_value, content_type, ref_id, author_id, language) -> int:
     conn = local_engine.connect()
     try:
         result = conn.execute(
@@ -56,17 +39,15 @@ def _insert_ugc(
                 "ts": datetime.utcnow(),
             }
         )
-
         content_id = result.fetchone()[0]
         conn.commit()
         return content_id
-
     finally:
         conn.close()
 
 
 # -------------------------------------------
-# KEYWORD EXTRACTION USING TF-IDF
+# KEYWORD EXTRACTION (TF-IDF)
 # -------------------------------------------
 def _extract_keywords(text_value: str, top_k: int = 10) -> List[str]:
 
@@ -82,11 +63,12 @@ def _extract_keywords(text_value: str, top_k: int = 10) -> List[str]:
     vocab = vec.get_feature_names_out()
 
     ranked = sorted(zip(vocab, scores), key=lambda x: x[1], reverse=True)
+
     return [w for w, _ in ranked[:top_k]]
 
 
 # -------------------------------------------
-# MAIN FUNCTION: EXTRACT + STORE + STREAM
+# MAIN FUNCTION: STORE + KEYWORDS + REDIS
 # -------------------------------------------
 def extract_keywords_and_store(
     text_value: str,
@@ -96,23 +78,16 @@ def extract_keywords_and_store(
     language: Optional[str] = "en",
 ) -> Dict:
 
-    # Skip if text is empty
     if not text_value or not text_value.strip():
         return {"keywords": []}
 
-    # 1) Store original text in DB
-    content_id = _insert_ugc(
-        text_value=text_value,
-        content_type=content_type,
-        ref_id=ref_id,
-        author_id=author_id,
-        language=language
-    )
+    # 1) Insert UGC
+    content_id = _insert_ugc(text_value, content_type, ref_id, author_id, language)
 
     # 2) Extract Keywords
     keywords = _extract_keywords(text_value)
 
-    # 3) Store keywords + send redis events
+    # 3) Insert into DB + Stream to Redis
     conn = local_engine.connect()
     try:
         for kw in keywords:
@@ -121,29 +96,21 @@ def extract_keywords_and_store(
                     INSERT INTO nlp_keywords (content_id, keyword, keyword_type, relevance, confidence, extracted_at)
                     VALUES (:cid, :kw, 'keyword', 1.0, 0.9, :ts)
                 """),
-                {
-                    "cid": content_id,
-                    "kw": kw,
-                    "ts": datetime.utcnow()
-                }
+                {"cid": content_id, "kw": kw, "ts": datetime.utcnow()}
             )
 
-            # Emit event to Redis Stream
+            # --- FIXED REDIS STREAM CALL ---
             redis_client.xadd(
-                "nlp_events",
-                {
-                    "topic": kw,
-                    "topic_type": "keyword",
-                    "location": "global",
-                    "relevance": "1.0",
-                    "polarity": "1.0",
+                name="nlp_events",
+                fields={
+                    "keyword": kw,
+                    "content_id": str(content_id),
+                    "type": "keyword",
                 },
                 maxlen=100000,
-                approximate=True,
+                
             )
-
         conn.commit()
-
     finally:
         conn.close()
 

@@ -9,10 +9,14 @@ MODEL_PATH = os.path.join(MODEL_DIR, "retention_model.pkl")
 
 
 def load_retention_model():
-    if not os.path.exists(MODEL_PATH):
-        raise RuntimeError("Retention model not trained. Run retention_trainer.py first.")
-    return joblib.load(MODEL_PATH)
+    print("🔍 Loading Retention Model from:", MODEL_PATH)
 
+    if not os.path.exists(MODEL_PATH):
+        print("❌ Model file missing at runtime:", MODEL_PATH)
+        raise RuntimeError("Retention model not trained. Run retention_trainer.py first.")
+
+    print("📦 Model found. Loading...")
+    return joblib.load(MODEL_PATH)
 
 def predict_retention(db, user_id: int):
 

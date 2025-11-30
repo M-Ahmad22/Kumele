@@ -74,3 +74,32 @@ services:
       MODEL_DIR: /beat/models_saved
     volumes:
       - ./models_saved:/beat/models_saved
+
+  moderation_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.moderation
+    environment:
+      LOCAL_DB_URL: ${LOCAL_DB_URL}
+      REDIS_URL: ${REDIS_URL}
+      MODEL_DIR: /app/models_saved
+      MODERATION_TEXT_MODEL_ID: ${MODERATION_TEXT_MODEL_ID}
+      MODERATION_IMAGE_MODEL_ID: ${MODERATION_IMAGE_MODEL_ID}
+    volumes:
+      - ./models_saved:/app/models_saved
+    depends_on:
+      - redis
+
+  rewards_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      REDIS_URL: ${REDIS_URL}
+      LOCAL_DB_URL: ${LOCAL_DB_URL}
+    command: >
+      celery -A app.workers.celery_app.celery_app worker
+      --loglevel=info
+      -Q rewards_queue
+    depends_on:
+      - redis

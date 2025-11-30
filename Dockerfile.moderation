@@ -1,0 +1,20 @@
+FROM python:3.10-slim
+
+WORKDIR /moderation
+
+# System deps
+RUN apt-get update && apt-get install -y build-essential libpq-dev && apt-get clean
+
+# HF cache folder (same style as your worker)
+ENV TRANSFORMERS_CACHE=/moderation/hf_cache
+RUN mkdir -p /moderation/hf_cache
+
+# Install Python deps
+COPY requirements-prod.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy entire project
+COPY . .
+
+# Run ONLY the moderation queue
+CMD ["celery", "-A", "app.workers.celery_app.celery_app", "worker", "--loglevel=info", "-Q", "moderation_queue"]

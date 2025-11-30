@@ -1,5 +1,5 @@
 # app/db/models.py
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, JSON, Boolean, Date
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, JSON, Boolean, Date, Numeric, TIMESTAMP
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 from datetime import datetime
@@ -61,6 +61,7 @@ class Event(Base):
     start_time = Column(DateTime)
     end_time = Column(DateTime)
     organiser_id = Column(Integer) 
+    
     
 class ModerationJob(Base):
     __tablename__ = "moderation_jobs"
@@ -180,3 +181,30 @@ class UserEvents(Base):
     payment_method = Column(String)
     amount_paid = Column(Float)
     
+
+# -----------------------------
+# Rewards System Models
+# -----------------------------
+class RewardCoupon(Base):
+    __tablename__ = "reward_coupons"
+
+    coupon_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)
+    status_level = Column(String(20))           # Bronze | Silver | Gold
+    discount_value = Column(Numeric(5, 2))      # 0.00 / 4.00 / 8.00
+    stackable = Column(Boolean, default=False)
+    is_redeemed = Column(Boolean, default=False)
+    issued_at = Column(TIMESTAMP, server_default=func.now())
+    redeemed_at = Column(TIMESTAMP)
+    meta = Column(JSON)                         # reason, source, metadata
+
+
+class RewardHistory(Base):
+    __tablename__ = "reward_history"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    status_level = Column(String(20))           # Bronze | Silver | Gold
+    awarded_count = Column(Integer, default=1)
+    notes = Column(String)
+    issued_at = Column(TIMESTAMP, server_default=func.now())

@@ -57,10 +57,12 @@ TRANSLATE_URL = os.getenv("TRANSLATE_URL", "https://translate.argosopentech.com"
 # MODEL DIRECTORIES
 # ------------------------
 
-MODEL_DIR = os.getenv(
-    "MODEL_DIR",
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models_saved"))
-)
+# MODEL_DIR = os.getenv(
+#     "MODEL_DIR",
+#     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
+# )
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+MODEL_DIR = os.path.join(BASE_DIR, "models")
 
 TFRS_MODEL_DIR = os.path.join(MODEL_DIR, "tfrs_model")
 KMEANS_MODEL_DIR = os.path.join(MODEL_DIR, "kmeans_users")

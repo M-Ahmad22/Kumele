@@ -1,5 +1,5 @@
 # app/db/models_rewards.py
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Numeric, JSON, func
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Numeric, JSON, func , Numeric
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 
